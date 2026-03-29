@@ -320,9 +320,13 @@
     opacity: 0.25;
     text-transform: uppercase;
   }
+
+
+
 </style>
 </head>
 <body>
+
 
 <header>
   <span class="header-ornament">⸻ ✦ ⸻</span>
@@ -496,13 +500,13 @@ const act3 = [
   {
     number: "Session 7",
     title: "The Man They Call Theseus",
-    quote: '"I&#39;d rather die"',
+    quote: '"Tell me, if I ripped you apart piece-by-piece and rebuilt you in my image, would you still be the same man?"',
     blurb: "Harmony and Theseus find themselves back in Celestia, where the two clash over a boy whose fate they both fight for. Theseus, being tasked with indoctrinating his closest friend to Nyxmaris, refuses to pull through, finally ending his alliagence to demons and gods alike. The headmaster is found in a comatose state and Kry is locked away at Magneia's peak. The party free both, but little time is spent celebrating before the clock tower in the school is destroyed."
   },
   {
     number: "Session 8",
-    title: "The Man They Call Lucan",
-    quote: "Rise, O' Knight of the Void",
+    title: "[REDACTED]",
+    quote: '"Adventure Awaits"',
     blurb: "This adventure has yet to happen."
   }
 ];
@@ -581,7 +585,7 @@ act3.forEach((s, i) => act3Grid.appendChild(buildCard(s, i)));
 </style>
 
 <!-- KAZRYN GAME SECTION V2 -->
-<div style="text-align:center; padding: 60px 20px 20px;">
+<div id="game-header" style="text-align:center; padding: 60px 20px 20px; display:none;">
   <div style="display:inline-block; position:relative;">
     <div style="position:absolute; top:50%; left:0; right:0; height:1px; background:linear-gradient(to right,transparent,#7a1f1f,transparent);"></div>
     <span style="font-family:'Cinzel Decorative',serif; font-size:clamp(1rem,3vw,1.6rem); color:#7a1f1f; background:#0d0a06; padding:0 32px; position:relative; z-index:1; text-shadow:0 0 20px rgba(122,31,31,0.6);">The Hunting Grounds</span>
@@ -625,6 +629,31 @@ act3.forEach((s, i) => act3Grid.appendChild(buildCard(s, i)));
       <button id="restart-btn">HUNT AGAIN</button>
     </div>
   </div>
+  <div id="iam-screen">
+    <canvas id="iamCanvas"></canvas>
+    <div id="iam-text">
+      <div id="iam-words">I &nbsp;A M &nbsp; H E R E</div>
+    </div>
+  </div>
+
+  <!-- ══ GAME LOCK OVERLAY ══ -->
+  <div id="game-lock">
+    <canvas id="lock-canvas"></canvas>
+    <div id="lock-hint">CLICK LOCK TO UNLOCK</div>
+  </div>
+
+  <!-- ══ TERMINAL (inside game-container) ══ -->
+  <div id="game-terminal">
+    <div id="terminal-box">
+      <div id="terminal-output"></div>
+      <div id="terminal-input-line">
+        <span id="terminal-prompt">&gt;&gt;</span>
+        <input id="terminal-input" type="text" autocomplete="off" spellcheck="false" maxlength="40"/>
+        <span id="terminal-cursor">█</span>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <footer>May your dice roll true &nbsp;✦&nbsp; The story continues</footer>
@@ -751,12 +780,142 @@ act3.forEach((s, i) => act3Grid.appendChild(buildCard(s, i)));
 }
 #victory-screen { flex-direction: column; }
 #victoryCanvas { position:absolute; inset:0; width:100%; height:100%; }
-#victory-text { position:relative; z-index:2; text-align:center; padding:40px; }
+#victory-text { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:2; text-align:center; width:auto; white-space:nowrap; }
 .v-rune { font-size:2rem; color:#c94040; margin-bottom:12px; animation: pulse-red 1.5s ease-in-out infinite; }
 @keyframes pulse-red {
   0%,100%{ text-shadow:0 0 10px rgba(200,40,40,0.4); }
   50%    { text-shadow:0 0 30px rgba(200,40,40,1); }
 }
+#victory-text .v-rune,
+#victory-text h2,
+#victory-text p { display: none; }
+#restart-btn {
+  font-family: 'Cinzel', serif; font-size: 0.75rem;
+  letter-spacing: 0.3em; color: rgba(200,150,100,0.7);
+  background: rgba(0,0,0,0.5); border: 1px solid rgba(180,80,40,0.35);
+  padding: 10px 32px; cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.25s;
+}
+#restart-btn:hover {
+  color: #c94040;
+  border-color: rgba(200,60,20,0.7);
+  box-shadow: 0 0 16px rgba(200,40,20,0.3);
+}
+
+#iam-screen {
+  position: absolute; inset: 0;
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column;
+  background: #000;
+  z-index: 20;
+}
+#iam-screen.active { display: flex; }
+#iamCanvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+#iam-text {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  height: 100%; padding-bottom: 48px;
+  width: 100%;
+}
+#iam-words {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  color: #cc3010;
+  letter-spacing: 0.4em;
+  text-shadow: 0 0 40px rgba(200,60,20,0.9), 0 0 80px rgba(180,40,10,0.5);
+  margin-bottom: 32px;
+  opacity: 0;
+}
+
+/* ══ GAME LOCK OVERLAY ══ */
+#game-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: rgba(6,2,3,0.97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#game-lock.unlocked { display: none; }
+#lock-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+#lock-hint {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.5em;
+  color: rgba(201,146,42,0.3);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ══ IN-GAME TERMINAL ══ */
+#game-terminal {
+  position: absolute;
+  inset: 0;
+  z-index: 600;
+  background: rgba(0,0,0,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#game-terminal.active { display: flex; }
+#terminal-box {
+  width: min(560px, 88%);
+  background: #020802;
+  border: 2px solid #1a6b1a;
+  box-shadow: 0 0 40px rgba(20,160,20,0.3), inset 0 0 20px rgba(0,20,0,0.6);
+  padding: 28px 32px 20px;
+  font-family: "Courier New", Courier, monospace;
+  color: #33ff33;
+  position: relative;
+  box-sizing: border-box;
+}
+#terminal-box::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 4px);
+  pointer-events: none; z-index: 1;
+}
+#terminal-output {
+  position: relative; z-index: 2;
+  white-space: pre-wrap;
+  font-size: clamp(0.7rem, 1.6vw, 0.88rem);
+  line-height: 1.9; margin-bottom: 14px; min-height: 340px; overflow: hidden;
+}
+#terminal-output .dim   { color: rgba(51,255,51,0.4); }
+#terminal-output .err   { color: #ff4444; }
+#terminal-output .ok    { color: #88ff88; }
+#terminal-output .label { color: rgba(51,255,51,0.75); }
+#terminal-input-line {
+  display: flex; align-items: center; gap: 8px;
+  position: relative; z-index: 2;
+  border-top: 1px solid rgba(51,255,51,0.12); padding-top: 10px;
+}
+#terminal-prompt { color: rgba(51,255,51,0.55); font-size: 0.85rem; }
+#terminal-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #33ff33; font-family: "Courier New", Courier, monospace;
+  font-size: clamp(0.7rem, 1.6vw, 0.88rem);
+  caret-color: transparent; letter-spacing: 0.05em;
+}
+#terminal-cursor { color: #33ff33; animation: gl-blink 1s step-end infinite; font-size: 0.85rem; }
+@keyframes gl-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
 </style>
 
 <script>
@@ -783,6 +942,7 @@ function vpx(c,x,y,w,h,color){
 
 // ── STATE ─────────────────────────────────────────────────
 let gameRunning = false;
+let playCount = 0;
 let keys = {};
 let particles = [], bloodSplats = [], slashFx = [], chainFx = [], novaFx = null, sobTexts = [];
 let kills = 0;
@@ -1494,9 +1654,191 @@ function gameLoop(){
 // ── VICTORY ───────────────────────────────────────────────
 function showVictory(){
   gameRunning=false;
+  if(playCount>=3){
+    showIamHere();
+    return;
+  }
   document.getElementById('victory-screen').classList.add('active');
   victoryCanvas.width=860; victoryCanvas.height=480;
   drawVictory();
+}
+
+function showIamHere(){
+  const screen = document.getElementById('iam-screen');
+  screen.classList.add('active');
+  const c = document.getElementById('iamCanvas');
+  c.width = 860; c.height = 480;
+  drawIamHere(c);
+  // animate the text in
+  const words = document.getElementById('iam-words');
+  words.style.opacity = '0';
+  setTimeout(()=>{ words.style.transition='opacity 3s ease'; words.style.opacity='1'; }, 1200);
+}
+
+function drawIamHere(c){
+  const ic = c.getContext('2d');
+  ic.imageSmoothingEnabled = false;
+  const W=860, H=480;
+
+  // pure void
+  ic.fillStyle='#000000';
+  ic.fillRect(0,0,W,H);
+
+  // ── giant centered inverted triangle ──
+  const cx=W/2, cy=H/2;
+  // make it HUGE — nearly full canvas
+  const hw=200, hh=300; // narrower, taller
+  // tip points to lower-center
+  const tipX=cx, tipY=cy+hh*0.55;
+  const topL=cx-hw, topR=cx+hw, topY=cy-hh*0.45;
+
+  // atmospheric glow behind triangle — deep red emanation
+  const hg=ic.createRadialGradient(cx,cy-30,0,cx,cy-30,320);
+  hg.addColorStop(0,'rgba(100,20,8,0.35)');
+  hg.addColorStop(0.5,'rgba(60,10,5,0.15)');
+  hg.addColorStop(1,'rgba(0,0,0,0)');
+  ic.fillStyle=hg; ic.fillRect(0,0,W,H);
+
+  // drop shadow
+  ic.fillStyle='rgba(0,0,0,0.7)';
+  ic.beginPath();
+  ic.moveTo(topL+8, topY+8);
+  ic.lineTo(topR+8, topY+8);
+  ic.lineTo(tipX+8, tipY+8);
+  ic.closePath(); ic.fill();
+
+  // outer triangle — deep dark rust
+  ic.fillStyle='#280a04';
+  ic.beginPath();
+  ic.moveTo(topL, topY);
+  ic.lineTo(topR, topY);
+  ic.lineTo(tipX, tipY);
+  ic.closePath(); ic.fill();
+
+  // mid layer — slightly lighter rust
+  ic.fillStyle='#3c1008';
+  ic.beginPath();
+  ic.moveTo(topL+14, topY+10);
+  ic.lineTo(topR-14, topY+10);
+  ic.lineTo(tipX, tipY-14);
+  ic.closePath(); ic.fill();
+
+  // inner highlight layer — richer crimson centre
+  ic.fillStyle='#521408';
+  ic.beginPath();
+  ic.moveTo(topL+40, topY+28);
+  ic.lineTo(topR-40, topY+28);
+  ic.lineTo(tipX, tipY-50);
+  ic.closePath(); ic.fill();
+
+  // ── scratches / cracks across the face ──
+  const veins=[
+    // central deep split top to tip
+    [[cx-4,topY+12],[cx-14,topY+45],[cx-28,topY+90],[cx-18,topY+145],[cx-6,topY+200],[cx-2,tipY-40]],
+    [[cx+4,topY+12],[cx+16,topY+48],[cx+30,topY+95],[cx+20,topY+150],[cx+8,topY+205],[cx+3,tipY-35]],
+    // left mid cracks
+    [[cx-50,topY+22],[cx-75,topY+48],[cx-95,topY+42],[cx-80,topY+28]],
+    [[cx-45,topY+70],[cx-72,topY+95],[cx-95,topY+88],[cx-85,topY+75]],
+    [[cx-35,topY+120],[cx-60,topY+142],[cx-80,topY+136],[cx-62,topY+122]],
+    [[cx-25,topY+168],[cx-45,topY+188],[cx-58,topY+182],[cx-44,topY+170]],
+    [[cx-15,topY+215],[cx-30,topY+232],[cx-40,topY+226]],
+    // right mid cracks
+    [[cx+48,topY+20],[cx+72,topY+46],[cx+92,topY+40],[cx+78,topY+26]],
+    [[cx+42,topY+68],[cx+70,topY+92],[cx+92,topY+85],[cx+78,topY+72]],
+    [[cx+32,topY+118],[cx+58,topY+140],[cx+76,topY+134],[cx+60,topY+120]],
+    [[cx+22,topY+166],[cx+42,topY+186],[cx+55,topY+180],[cx+42,topY+168]],
+    [[cx+12,topY+212],[cx+28,topY+230],[cx+38,topY+224]],
+    // horizontal shatter lines across face
+    [[cx-120,topY+35],[cx-85,topY+42],[cx-60,topY+38],[cx-30,topY+44]],
+    [[cx+28,topY+38],[cx+58,topY+32],[cx+88,topY+38],[cx+118,topY+33]],
+    [[cx-100,topY+85],[cx-70,topY+92],[cx-40,topY+88]],
+    [[cx+38,topY+82],[cx+68,topY+88],[cx+98,topY+83]],
+    [[cx-80,topY+135],[cx-50,topY+142],[cx-22,topY+138]],
+    [[cx+20,topY+132],[cx+48,topY+138],[cx+75,topY+133]],
+    [[cx-55,topY+180],[cx-30,topY+186],[cx-8,topY+182]],
+    [[cx+6,topY+178],[cx+30,topY+184],[cx+52,topY+179]],
+    // upper corner diagonal slashes
+    [[topL+18,topY+10],[topL+55,topY+38],[topL+48,topY+52]],
+    [[topR-18,topY+10],[topR-58,topY+40],[topR-50,topY+55]],
+    [[topL+22,topY+55],[topL+50,topY+72],[topL+42,topY+82]],
+    [[topR-22,topY+55],[topR-52,topY+74],[topR-44,topY+84]],
+    // fine hairline micro-cracks scattered
+    [[cx-90,topY+60],[cx-110,topY+68]],
+    [[cx+88,topY+58],[cx+108,topY+66]],
+    [[cx-70,topY+108],[cx-88,topY+114]],
+    [[cx+68,topY+106],[cx+86,topY+112]],
+    [[cx-50,topY+155],[cx-65,topY+160]],
+    [[cx+48,topY+153],[cx+62,topY+158]],
+  ];
+
+  // dark crack base
+  ic.lineWidth=2; ic.lineCap='round'; ic.lineJoin='round';
+  ic.strokeStyle='rgba(10,2,2,0.95)';
+  veins.forEach(pts=>{
+    ic.beginPath(); ic.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++) ic.lineTo(pts[i][0],pts[i][1]);
+    ic.stroke();
+  });
+
+  // mid crack
+  ic.lineWidth=1.5;
+  ic.strokeStyle='rgba(80,28,12,0.7)';
+  veins.forEach(pts=>{
+    ic.beginPath(); ic.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++) ic.lineTo(pts[i][0],pts[i][1]);
+    ic.stroke();
+  });
+
+  // bright hot scratch highlight — orange-red
+  ic.lineWidth=0.8;
+  ic.strokeStyle='rgba(200,80,30,0.35)';
+  veins.forEach(pts=>{
+    ic.beginPath(); ic.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++) ic.lineTo(pts[i][0],pts[i][1]);
+    ic.stroke();
+  });
+
+  // ── flat top edge ──
+  ic.lineWidth=3;
+  ic.strokeStyle='rgba(160,70,30,0.6)';
+  ic.beginPath(); ic.moveTo(topL,topY); ic.lineTo(topR,topY); ic.stroke();
+  ic.lineWidth=1.5;
+  ic.strokeStyle='rgba(220,130,60,0.25)';
+  ic.beginPath(); ic.moveTo(topL,topY+2); ic.lineTo(topR,topY+2); ic.stroke();
+
+  // ── blood drips from top edge ──
+  const drips=[
+    {x:cx-240,len:28},{x:cx-170,len:55},{x:cx-100,len:38},
+    {x:cx-38, len:70},{x:cx+10, len:44},{x:cx+65, len:62},
+    {x:cx+130,len:35},{x:cx+195,len:58},{x:cx+250,len:22},
+  ];
+  drips.forEach(d=>{
+    // drip shaft
+    ipx(ic,d.x-2,topY,3,d.len,'rgba(110,6,6,0.85)');
+    ipx(ic,d.x-1,topY,1,d.len,'rgba(160,12,12,0.5)');
+    // bulb at tip
+    ipx(ic,d.x-3,topY+d.len,5,6,'rgba(130,8,8,0.7)');
+    ipx(ic,d.x-2,topY+d.len+4,4,4,'rgba(100,5,5,0.5)');
+    ipx(ic,d.x-1,topY+d.len+7,2,3,'rgba(80,4,4,0.35)');
+  });
+
+  // ── tip glow ──
+  const tg=ic.createRadialGradient(tipX,tipY,0,tipX,tipY,40);
+  tg.addColorStop(0,'rgba(180,50,15,0.5)');
+  tg.addColorStop(0.5,'rgba(120,25,8,0.2)');
+  tg.addColorStop(1,'rgba(0,0,0,0)');
+  ic.fillStyle=tg; ic.fillRect(tipX-45,tipY-45,90,90);
+
+  // heavy vignette — crushes edges to pure black, draws eye to triangle
+  const vg=ic.createRadialGradient(W/2,H/2,H*0.08,W/2,H/2,H*0.75);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(0.6,'rgba(0,0,0,0.3)');
+  vg.addColorStop(1,'rgba(0,0,0,0.97)');
+  ic.fillStyle=vg; ic.fillRect(0,0,W,H);
+}
+
+function ipx(c,x,y,w,h,color){
+  c.fillStyle=color; c.fillRect(Math.round(x),Math.round(y),w,h);
 }
 
 function drawVictory(){
@@ -1663,13 +2005,277 @@ function shadeHex(hex){ return '#000'; } // simple dark shade
 // ── BUTTONS ───────────────────────────────────────────────
 document.getElementById('start-btn').addEventListener('click',()=>{
   document.getElementById('game-overlay').classList.remove('active');
-  resetGame(); gameRunning=true; gameLoop();
+  playCount++; resetGame(); gameRunning=true; gameLoop();
 });
+
+
 document.getElementById('restart-btn').addEventListener('click',()=>{
   document.getElementById('victory-screen').classList.remove('active');
-  resetGame(); gameRunning=true; gameLoop();
+  playCount++; resetGame(); gameRunning=true; gameLoop();
 });
 })();
 </script>
+
+<script>
+// ╔═══════════════════════════════════════╗
+// ║  CREDENTIALS — easy to find & change ║
+// ╚═══════════════════════════════════════╝
+const CREDENTIALS = { username: '123', password: '123' };
+
+(function(){
+  const gameLock   = document.getElementById('game-lock');
+  const gameTerm   = document.getElementById('game-terminal');
+  const termOutput = document.getElementById('terminal-output');
+  const termInput  = document.getElementById('terminal-input');
+  const lockCanvas = document.getElementById('lock-canvas');
+  const lockCtx    = lockCanvas.getContext('2d');
+
+  let phase = 'username';
+  let enteredUser = '';
+  let lockHover = false;
+
+  // ── Draw the chain and lock ──────────────────────────────
+  function resizeLock(){
+    const rect = gameLock.getBoundingClientRect();
+    lockCanvas.width  = rect.width  || 860;
+    lockCanvas.height = rect.height || 600;
+    drawLock();
+  }
+
+  function drawChainLink(ctx, x, y, w, h, angle, gold){
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    // outer ring
+    ctx.strokeStyle = '#5a3a08';
+    ctx.lineWidth = h * 0.38;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
+    ctx.stroke();
+    // inner ring (hollow center)
+    ctx.strokeStyle = gold ? '#c9922a' : '#8a6018';
+    ctx.lineWidth = h * 0.18;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w/2 - h*0.1, h/2 - h*0.1, 0, 0, Math.PI*2);
+    ctx.stroke();
+    // highlight
+    ctx.strokeStyle = 'rgba(230,180,60,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(-w*0.08, -h*0.22, w/2 - h*0.18, h/2 - h*0.22, 0, Math.PI*1.1, Math.PI*1.8);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLock(){
+    const W = lockCanvas.width, H = lockCanvas.height;
+    const ctx = lockCtx;
+    ctx.clearRect(0,0,W,H);
+
+    const cx = W/2, cy = H/2;
+    // chains removed — lock only
+
+    // ── LOCK BODY ──
+    const hover = lockHover;
+    const lbW = 88, lbH = 72, lbX = cx - lbW/2, lbY = cy - lbH/2;
+    const shackleR = 30;
+
+    // glow
+    if(hover){
+      ctx.save();
+      ctx.shadowColor = '#c9922a';
+      ctx.shadowBlur = 28;
+      ctx.fillStyle = 'rgba(201,146,42,0.08)';
+      ctx.fillRect(lbX-20, lbY-shackleR-20, lbW+40, lbH+shackleR+40);
+      ctx.restore();
+    }
+
+    // shackle (U-bar)
+    ctx.save();
+    ctx.strokeStyle = '#3a2206';
+    ctx.lineWidth = 14;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - shackleR, cy - 8);
+    ctx.lineTo(cx - shackleR, cy - lbH/2 - shackleR*0.8);
+    ctx.arc(cx, cy - lbH/2 - shackleR*0.8, shackleR, Math.PI, 0);
+    ctx.lineTo(cx + shackleR, cy - 8);
+    ctx.stroke();
+    ctx.strokeStyle = hover ? '#e8b84b' : '#c9922a';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,220,100,0.2)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    // body shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.beginPath();
+    ctx.roundRect(lbX+4, lbY+4, lbW, lbH, 8);
+    ctx.fill();
+
+    // body fill
+    const bodyGrad = ctx.createLinearGradient(lbX, lbY, lbX, lbY+lbH);
+    bodyGrad.addColorStop(0, hover ? '#2e1a06' : '#1e1004');
+    bodyGrad.addColorStop(1, hover ? '#1a0e03' : '#120902');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.roundRect(lbX, lbY, lbW, lbH, 8);
+    ctx.fill();
+
+    // body border
+    ctx.strokeStyle = hover ? '#c9922a' : '#7a5010';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(lbX, lbY, lbW, lbH, 8);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(201,146,42,0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(lbX+2, lbY+2, lbW-4, lbH-4, 6);
+    ctx.stroke();
+
+    // keyhole
+    ctx.fillStyle = '#080502';
+    ctx.beginPath();
+    ctx.arc(cx, cy-2, 11, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#080502';
+    ctx.beginPath();
+    ctx.moveTo(cx-6, cy+2);
+    ctx.lineTo(cx+6, cy+2);
+    ctx.lineTo(cx+4, cy+16);
+    ctx.lineTo(cx-4, cy+16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = hover ? '#e8b84b' : '#c9922a';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy-2, 11, 0, Math.PI*2);
+    ctx.stroke();
+
+    // shine
+    ctx.fillStyle = 'rgba(201,146,42,0.22)';
+    ctx.beginPath();
+    ctx.roundRect(lbX+8, lbY+8, 22, 6, 3);
+    ctx.fill();
+  }
+
+  // Hit-test: is point inside lock body?
+  function isOnLock(mx, my){
+    const W = lockCanvas.width, H = lockCanvas.height;
+    const cx = W/2, cy = H/2;
+    const lbW = 88, lbH = 72;
+    const shackleR = 30;
+    // check body
+    if(mx >= cx-lbW/2-10 && mx <= cx+lbW/2+10 &&
+       my >= cy-lbH/2-shackleR-10 && my <= cy+lbH/2+10) return true;
+    return false;
+  }
+
+  lockCanvas.addEventListener('mousemove', e=>{
+    const r = lockCanvas.getBoundingClientRect();
+    const mx = (e.clientX-r.left)*(lockCanvas.width/r.width);
+    const my = (e.clientY-r.top)*(lockCanvas.height/r.height);
+    const onLock = isOnLock(mx, my);
+    if(onLock !== lockHover){ lockHover=onLock; drawLock(); }
+    lockCanvas.style.cursor = onLock ? 'pointer' : 'default';
+  });
+  lockCanvas.addEventListener('mouseleave', ()=>{ lockHover=false; drawLock(); });
+
+  window.addEventListener('resize', resizeLock);
+  setTimeout(resizeLock, 50);
+
+  function line(text, cls){
+    const span = document.createElement('span');
+    if(cls) span.className = cls;
+    span.textContent = text;
+    termOutput.appendChild(span);
+    termOutput.appendChild(document.createElement('br'));
+  }
+
+  function typeLines(lines, done){
+    let i=0;
+    (function next(){
+      if(i>=lines.length){ if(done) done(); return; }
+      const [text,cls,delay] = lines[i++];
+      line(text,cls);
+      setTimeout(next, delay||75);
+    })();
+  }
+
+  function boot(){
+    termOutput.innerHTML='';
+    phase='username'; enteredUser='';
+    termInput.value=''; termInput.type='text';
+    typeLines([
+      ['\\\\CELESTIA SECURE ARCHIVE v1.0','dim',60],
+      ['\\\\INITIALIZING...','dim',120],
+      ['','',80],
+      ['\\\\WELCOME','',80],
+      ['\\\\LOGIN CREDENTIALS REQUIRED','',80],
+      ['','',70],
+      ['USERNAME:','label',60],
+    ], ()=>termInput.focus());
+  }
+
+  lockCanvas.addEventListener('click', e=>{
+    const r = lockCanvas.getBoundingClientRect();
+    const mx = (e.clientX-r.left)*(lockCanvas.width/r.width);
+    const my = (e.clientY-r.top)*(lockCanvas.height/r.height);
+    if(!isOnLock(mx,my)) return;
+    gameTerm.classList.add('active');
+    boot();
+  });
+
+  termInput.addEventListener('keydown', e=>{
+    if(e.key!=='Enter') return;
+    e.preventDefault();
+    const val = termInput.value.trim();
+
+    if(phase==='username'){
+      line(val,'');
+      enteredUser=val; phase='password';
+      line('',''); line('PASSWORD:','label');
+      termInput.value=''; termInput.type='password';
+      termInput.focus();
+    } else {
+      line('*'.repeat(Math.max(val.length,1)),'');
+      if(enteredUser===CREDENTIALS.username && val===CREDENTIALS.password){
+        typeLines([
+          ['','',0],
+          ['ACCESS GRANTED.','ok',100],
+          ['WELCOME BACK.','ok',120],
+          ['','',80],
+          ['\\\\LOADING...','dim',100],
+        ], ()=>{
+          setTimeout(()=>{
+            gameTerm.classList.remove('active');
+            gameLock.classList.add('unlocked');
+            document.getElementById('game-header').style.display = 'block';
+          }, 700);
+        });
+      } else {
+        termInput.disabled = true;
+        typeLines([
+          ['','',0],
+          ['ACCESS DENIED.','err',80],
+          ['INCORRECT CREDENTIALS.','err',80],
+          ['\\\\DISCONNECTING...','dim',200],
+        ], ()=>{
+          setTimeout(()=>{
+            gameTerm.classList.remove('active');
+            termInput.disabled = false;
+          }, 600);
+        });
+      }
+    }
+  });
+
+  document.getElementById('terminal-box').addEventListener('click', ()=>termInput.focus());
+})();
+</script>
+
 </body>
 </html>
