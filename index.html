@@ -881,10 +881,21 @@ const act3 = [
   },
   {
     number: "Session 8",
-    title: "[REDACTED]",
-    quote: "[REDACTED]",
-    blurb: "This adventure has yet to happen."
+    title: "The Man They Call Lucan",
+    quote: "Rise, O' Knight of the Void.",
+    blurb: "With the realm splitting open, the group has no choice but to take the fight to Magneia, where they find themselves up against a forgotten legend."
   }
+];
+
+const act4 = [
+  {
+   number: "Session 1",
+   title: "Redacted",
+   quote: "Redacted",
+   blurb: "Adventure awaits"
+   
+    }
+  
 ];
 
 function buildCard(session, index) {
@@ -943,6 +954,8 @@ const act2Grid = document.getElementById('act2-grid');
 act2.forEach((s, i) => act2Grid.appendChild(buildCard(s, i)));
 const act3Grid = document.getElementById('act3-grid');
 act3.forEach((s, i) => act3Grid.appendChild(buildCard(s, i)));
+const act4Grid = document.getElementById('act4-grid');
+act4.forEach((s, i) => act4Grid.appendChild(buildCard(s, i)));
 </script>
 
 <style>
